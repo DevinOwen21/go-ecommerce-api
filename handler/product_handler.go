@@ -3,6 +3,7 @@ package handler
 import (
 	"encoding/json"
 	"go-ecommerce-api/model"
+	"go-ecommerce-api/response"
 	"go-ecommerce-api/service"
 	"net/http"
 	"strconv"
@@ -21,98 +22,79 @@ func NewProductHandler(service *service.ProductService) *ProductHandler {
 }
 
 func (h *ProductHandler) GetProducts(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-
 	products, err := h.service.GetProducts()
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		response.Error(w, http.StatusInternalServerError, err)
 		return
 	}
 
-	if err := json.NewEncoder(w).Encode(products); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	response.JSON(w, http.StatusOK, products)
 }
 
 func (h *ProductHandler) GetProductByID(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
 
 	id := chi.URLParam(r, "id")
 	number, err := strconv.Atoi(id)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		response.Error(w, http.StatusBadRequest, err)
+		return
 	}
 
 	product, err := h.service.GetProductByID(number)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusNotFound)
+		response.Error(w, http.StatusNotFound, err)
 		return
 	}
-	if err := json.NewEncoder(w).Encode(product); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	response.JSON(w, http.StatusOK, product)
 }
 
 func (h *ProductHandler) CreateProduct(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
 	var product model.Product
 	if err := json.NewDecoder(r.Body).Decode(&product); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		response.Error(w, http.StatusBadRequest, err)
 		return
 	}
 
 	result, err := h.service.CreateProduct(product)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		response.Error(w, http.StatusBadRequest, err)
 		return
 	}
-	w.WriteHeader(http.StatusCreated)
-	if err := json.NewEncoder(w).Encode(result); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	response.JSON(w, http.StatusCreated, result)
 }
 
 func (h *ProductHandler) UpdateProduct(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
 	id := chi.URLParam(r, "id")
 	number, err := strconv.Atoi(id)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		response.Error(w, http.StatusBadRequest, err)
 		return
 	}
 	var product model.Product
 	if err := json.NewDecoder(r.Body).Decode(&product); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		response.Error(w, http.StatusBadRequest, err)
 		return
 	}
 	product.ID = number
 	result, err := h.service.UpdateProduct(product)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusNotFound)
+		response.Error(w, http.StatusNotFound, err)
 		return
 	}
-	w.WriteHeader(http.StatusOK)
-	if err := json.NewEncoder(w).Encode(result); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	response.JSON(w, http.StatusOK, result)
 
 }
 
 func (h *ProductHandler) DeleteProduct(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
 	id := chi.URLParam(r, "id")
 	number, err := strconv.Atoi(id)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		response.Error(w, http.StatusBadRequest, err)
 		return
 	}
 	err = h.service.DeleteProduct(number)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusNotFound)
+		response.Error(w, http.StatusNotFound, err)
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)

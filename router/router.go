@@ -2,6 +2,7 @@ package router
 
 import (
 	"go-ecommerce-api/handler"
+	"go-ecommerce-api/middleware"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -9,6 +10,7 @@ import (
 
 func SetupRouter(productHandler *handler.ProductHandler) http.Handler {
 	r := chi.NewRouter()
+	r.Use(middleware.Logger)
 	r.Get("/products", productHandler.GetProducts)
 	r.Get("/products/{id}", productHandler.GetProductByID)
 	return r
