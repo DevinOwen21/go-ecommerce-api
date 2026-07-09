@@ -13,5 +13,8 @@ func SetupRouter(productHandler *handler.ProductHandler) http.Handler {
 	r.Use(middleware.Logger)
 	r.Get("/products", productHandler.GetProducts)
 	r.Get("/products/{id}", productHandler.GetProductByID)
+	r.Post("/products", productHandler.CreateProduct)
+	r.Put("/products/{id}", productHandler.UpdateProduct)
+	r.Delete("/products/{id}", productHandler.DeleteProduct)
 	return r
 }

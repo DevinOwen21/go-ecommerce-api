@@ -24,11 +24,11 @@ func NewProductHandler(service *service.ProductService) *ProductHandler {
 func (h *ProductHandler) GetProducts(w http.ResponseWriter, r *http.Request) {
 	products, err := h.service.GetProducts()
 	if err != nil {
-		response.Error(w, http.StatusInternalServerError, err)
+		response.Error(w, http.StatusInternalServerError, "Internal Server Error")
 		return
 	}
 
-	response.JSON(w, http.StatusOK, products)
+	response.JSON(w, true, http.StatusOK, "Product Retrieved Successfully", products)
 }
 
 func (h *ProductHandler) GetProductByID(w http.ResponseWriter, r *http.Request) {
@@ -36,52 +36,52 @@ func (h *ProductHandler) GetProductByID(w http.ResponseWriter, r *http.Request) 
 	id := chi.URLParam(r, "id")
 	number, err := strconv.Atoi(id)
 	if err != nil {
-		response.Error(w, http.StatusBadRequest, err)
+		response.Error(w, http.StatusBadRequest, "Bad Request")
 		return
 	}
 
 	product, err := h.service.GetProductByID(number)
 	if err != nil {
-		response.Error(w, http.StatusNotFound, err)
+		response.Error(w, http.StatusNotFound, "Product not found")
 		return
 	}
-	response.JSON(w, http.StatusOK, product)
+	response.JSON(w, true, http.StatusOK, "Product Retrieved Successfully", product)
 }
 
 func (h *ProductHandler) CreateProduct(w http.ResponseWriter, r *http.Request) {
 	var product model.Product
 	if err := json.NewDecoder(r.Body).Decode(&product); err != nil {
-		response.Error(w, http.StatusBadRequest, err)
+		response.Error(w, http.StatusBadRequest, "Bad Request")
 		return
 	}
 
 	result, err := h.service.CreateProduct(product)
 	if err != nil {
-		response.Error(w, http.StatusBadRequest, err)
+		response.Error(w, http.StatusBadRequest, "Bad Request")
 		return
 	}
-	response.JSON(w, http.StatusCreated, result)
+	response.JSON(w, true, http.StatusCreated, "Product Created Successfully", result)
 }
 
 func (h *ProductHandler) UpdateProduct(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	number, err := strconv.Atoi(id)
 	if err != nil {
-		response.Error(w, http.StatusBadRequest, err)
+		response.Error(w, http.StatusBadRequest, "Bad Request")
 		return
 	}
 	var product model.Product
 	if err := json.NewDecoder(r.Body).Decode(&product); err != nil {
-		response.Error(w, http.StatusBadRequest, err)
+		response.Error(w, http.StatusBadRequest, "Bad Request")
 		return
 	}
 	product.ID = number
 	result, err := h.service.UpdateProduct(product)
 	if err != nil {
-		response.Error(w, http.StatusNotFound, err)
+		response.Error(w, http.StatusNotFound, "Product not found")
 		return
 	}
-	response.JSON(w, http.StatusOK, result)
+	response.JSON(w, true, http.StatusOK, "Product Updated Successfully", result)
 
 }
 
@@ -89,13 +89,13 @@ func (h *ProductHandler) DeleteProduct(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	number, err := strconv.Atoi(id)
 	if err != nil {
-		response.Error(w, http.StatusBadRequest, err)
+		response.Error(w, http.StatusBadRequest, "Bad Request")
 		return
 	}
 	err = h.service.DeleteProduct(number)
 	if err != nil {
-		response.Error(w, http.StatusNotFound, err)
+		response.Error(w, http.StatusNotFound, "Product not found")
 		return
 	}
-	w.WriteHeader(http.StatusNoContent)
+	response.JSON(w, true, http.StatusOK, "Product Deleted Successfully", nil)
 }
