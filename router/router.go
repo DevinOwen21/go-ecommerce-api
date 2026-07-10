@@ -8,7 +8,7 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-func SetupRouter(productHandler *handler.ProductHandler) http.Handler {
+func SetupRouter(productHandler *handler.ProductHandler, userHandler *handler.UserHandler) http.Handler {
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 	r.Get("/products", productHandler.GetProducts)
@@ -16,5 +16,7 @@ func SetupRouter(productHandler *handler.ProductHandler) http.Handler {
 	r.Post("/products", productHandler.CreateProduct)
 	r.Put("/products/{id}", productHandler.UpdateProduct)
 	r.Delete("/products/{id}", productHandler.DeleteProduct)
+
+	r.Post("/register", userHandler.CreateUser)
 	return r
 }

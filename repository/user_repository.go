@@ -13,11 +13,17 @@ func NewUserRepository(db *sql.DB) *UserRepository {
 	return &UserRepository{db: db}
 }
 
-func (r *UserRepository) CreateUser(user model.User) error {
-	_, err := r.db.Exec("INSERT INTO users(name, email, password_hash) VALUES (?, ?, ?)", user.Name, user.Email, user.PasswordHash)
+func (r *UserRepository) CreateUser(user *model.User) error {
+	result, err := r.db.Exec("INSERT INTO users(name, email, password_hash) VALUES (?, ?, ?)", user.Name, user.Email, user.PasswordHash)
 	if err != nil {
 		return err
 	}
+
+	id, err := result.LastInsertId()
+	if err != nil {
+		return err
+	}
+	user.ID = int(id)
 	return nil
 }
 
