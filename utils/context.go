@@ -4,13 +4,18 @@ import "context"
 
 type contextKey string
 
-const userIDKey contextKey = "userID"
-
-func SetUserID(ctx context.Context, userID string) context.Context {
-	return context.WithValue(ctx, userIDKey, userID)
+type UserContext struct {
+	UserID string
+	Role   string
 }
 
-func GetUserID(ctx context.Context) (string, bool) {
-	userID, ok := ctx.Value(userIDKey).(string)
-	return userID, ok
+const userContextKey contextKey = "userContext"
+
+func SetUserContext(ctx context.Context, user UserContext) context.Context {
+	return context.WithValue(ctx, userContextKey, user)
+}
+
+func GetUserContext(ctx context.Context) (UserContext, bool) {
+	user, ok := ctx.Value(userContextKey).(UserContext)
+	return user, ok
 }

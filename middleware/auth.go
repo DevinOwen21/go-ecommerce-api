@@ -25,7 +25,11 @@ func JWT(next http.Handler) http.Handler {
 			response.Error(w, http.StatusUnauthorized, "Unauthorized")
 			return
 		}
-		ctx := utils.SetUserID(r.Context(), claims.Subject)
+		user := utils.UserContext{
+			UserID: claims.Subject,
+			Role:   claims.Role,
+		}
+		ctx := utils.SetUserContext(r.Context(), user)
 		r = r.WithContext(ctx)
 		next.ServeHTTP(w, r)
 		return

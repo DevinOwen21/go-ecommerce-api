@@ -20,21 +20,21 @@ func NewUserHandler(service *service.UserService) *UserHandler {
 
 func (h *UserHandler) GetProfile(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	userID, ok := utils.GetUserID(ctx)
+	user, ok := utils.GetUserContext(ctx)
 	if !ok {
 		response.Error(w, http.StatusUnauthorized, "unauthorized")
 		return
 	}
-	number, err := strconv.Atoi(userID)
+	number, err := strconv.Atoi(user.UserID)
 	if err != nil {
 		response.Error(w, http.StatusUnauthorized, "unauthorized")
 		return
 	}
-	user, err := h.service.GetProfile(number)
+	profile, err := h.service.GetProfile(number)
 	if err != nil {
 		response.Error(w, http.StatusNotFound, "user not found")
 		return
 	}
-	response.JSON(w, true, http.StatusOK, "user Retrieved Successfully", user)
+	response.JSON(w, true, http.StatusOK, "user Retrieved Successfully", profile)
 
 }

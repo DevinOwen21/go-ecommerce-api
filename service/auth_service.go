@@ -85,7 +85,7 @@ func (s *AuthService) Login(req dto.LoginRequest) (*dto.LoginResponse, error) {
 		return nil, errors.New("Invalid email or password")
 	}
 
-	token, err := utils.GenerateToken(user.ID)
+	token, err := utils.GenerateToken(user.ID, user.Role)
 	if err != nil {
 		return nil, err
 	}

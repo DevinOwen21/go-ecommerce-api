@@ -29,12 +29,13 @@ func (r *UserRepository) CreateUser(user *model.User) error {
 
 func (r *UserRepository) GetUserByEmail(email string) (*model.User, error) {
 	var user model.User
-	row := r.db.QueryRow("SELECT id, name, email, password_hash from users where email = ?", email)
+	row := r.db.QueryRow("SELECT id, name, email, password_hash, role from users where email = ?", email)
 	err := row.Scan(
 		&user.ID,
 		&user.Name,
 		&user.Email,
 		&user.PasswordHash,
+		&user.Role,
 	)
 	if err != nil {
 		return nil, err
@@ -44,11 +45,12 @@ func (r *UserRepository) GetUserByEmail(email string) (*model.User, error) {
 
 func (r *UserRepository) GetUserByID(id int) (*model.User, error) {
 	var user model.User
-	row := r.db.QueryRow("SELECT id, name, email from users where id = ?", id)
+	row := r.db.QueryRow("SELECT id, name, email, role from users where id = ?", id)
 	err := row.Scan(
 		&user.ID,
 		&user.Name,
 		&user.Email,
+		&user.Role,
 	)
 	if err != nil {
 		return nil, err
