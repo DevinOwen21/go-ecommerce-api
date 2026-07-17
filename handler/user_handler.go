@@ -1,11 +1,11 @@
 package handler
 
 import (
-	"encoding/json"
-	"go-ecommerce-api/dto"
 	"go-ecommerce-api/response"
 	"go-ecommerce-api/service"
+	"go-ecommerce-api/utils"
 	"net/http"
+	"strconv"
 )
 
 type UserHandler struct {
@@ -18,17 +18,23 @@ func NewUserHandler(service *service.UserService) *UserHandler {
 	}
 }
 
-func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
-	var req dto.RegisterRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		response.Error(w, http.StatusBadRequest, "Bad Request")
+func (h *UserHandler) GetProfile(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	userID, ok := utils.GetUserID(ctx)
+	if !ok {
+		response.Error(w, http.StatusUnauthorized, "unauthorized")
 		return
 	}
-
-	result, err := h.service.Register(req)
+	number, err := strconv.Atoi(userID)
 	if err != nil {
-		response.Error(w, http.StatusBadRequest, "Bad Request")
+		response.Error(w, http.StatusUnauthorized, "unauthorized")
 		return
 	}
-	response.JSON(w, true, http.StatusCreated, "User registered successfully", result)
+	user, err := h.service.GetProfile(number)
+	if err != nil {
+		response.Error(w, http.StatusNotFound, "user not found")
+		return
+	}
+	response.JSON(w, true, http.StatusOK, "user Retrieved Successfully", user)
+
 }
