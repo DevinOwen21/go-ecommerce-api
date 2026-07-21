@@ -46,7 +46,7 @@ func (r *ProductRepository) GetProducts() ([]model.Product, error) {
 
 func (r *ProductRepository) GetProductById(id int) (model.Product, error) {
 	var product model.Product
-	row := r.db.QueryRow("SELECT id, name, description, price, stock, created_at, updated_t FROM products WHERE id = ?", id)
+	row := r.db.QueryRow("SELECT id, name, description, price, stock, created_at, updated_at FROM products WHERE id = ?", id)
 	err := row.Scan(
 		&product.ID, &product.Name, &product.Description, &product.Price, &product.Stock, &product.CreatedAt, &product.UpdatedAt)
 	if err != nil {
@@ -66,8 +66,7 @@ func (r *ProductRepository) CreateProduct(product model.Product) (model.Product,
 		return model.Product{}, err
 	}
 	product.ID = int(id)
-	return product, nil
-
+	return r.GetProductById(int(id))
 }
 
 func (r *ProductRepository) UpdateProduct(product model.Product) (model.Product, error) {
