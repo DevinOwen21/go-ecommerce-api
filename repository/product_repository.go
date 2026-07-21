@@ -70,18 +70,32 @@ func (r *ProductRepository) CreateProduct(product model.Product) (model.Product,
 }
 
 func (r *ProductRepository) UpdateProduct(product model.Product) (model.Product, error) {
-	result, err := r.db.Exec("UPDATE products SET name = ?, description = ?, price = ?, stock = ? WHERE id = ?", product.Name, product.Description, product.Price, product.Stock, product.ID)
+	result, err := r.db.Exec(
+		"UPDATE products SET name = ?, description = ?, price = ?, stock = ? WHERE id = ?",
+		product.Name,
+		product.Description,
+		product.Price,
+		product.Stock,
+		product.ID,
+	)
 	if err != nil {
 		return model.Product{}, err
 	}
+
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
 		return model.Product{}, err
 	}
+
 	if rowsAffected == 0 {
-		return model.Product{}, errors.New("product not found")
+		existingProduct, err := r.GetProductById(product.ID)
+		if err != nil {
+			return model.Product{}, err
+		}
+		return existingProduct, nil
 	}
-	return product, nil
+
+	return r.GetProductById(product.ID)
 }
 
 func (r *ProductRepository) DeleteProduct(id int) error {
