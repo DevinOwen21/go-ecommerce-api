@@ -22,6 +22,7 @@ func (s *UserService) GetProfile(userID int) (*dto.UserResponse, error) {
 		ID:    user.ID,
 		Name:  user.Name,
 		Email: user.Email,
+		Role:  user.Role,
 	}
 	return &response, nil
 }
