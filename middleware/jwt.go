@@ -10,16 +10,16 @@ import (
 func JWT(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-		bearer := r.Header.Get("Authorization")
-		if bearer == "" {
+		authHeader := r.Header.Get("Authorization")
+		if authHeader == "" {
 			response.Error(w, http.StatusUnauthorized, "Unauthorized")
 			return
 		}
-		if result := !strings.HasPrefix(bearer, "Bearer "); result {
+		if result := !strings.HasPrefix(authHeader, "Bearer "); result {
 			response.Error(w, http.StatusUnauthorized, "Unauthorized")
 			return
 		}
-		tokenString := strings.TrimPrefix(bearer, "Bearer ")
+		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
 		claims, err := utils.ValidateToken(tokenString)
 		if err != nil {
 			response.Error(w, http.StatusUnauthorized, "Unauthorized")

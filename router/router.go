@@ -16,7 +16,14 @@ func SetupRouter(productHandler *handler.ProductHandler, userHandler *handler.Us
 
 	r.Group(func(r chi.Router) {
 		r.Use(middleware.JWT)
+
 		r.Get("/users/me", userHandler.GetProfile)
+	})
+
+	r.Group(func(r chi.Router) {
+		r.Use(middleware.JWT)
+		r.Use(middleware.AdminOnly)
+
 		r.Post("/products", productHandler.CreateProduct)
 		r.Put("/products/{id}", productHandler.UpdateProduct)
 		r.Delete("/products/{id}", productHandler.DeleteProduct)
