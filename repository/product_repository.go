@@ -15,13 +15,13 @@ func NewProductRepository(db *sql.DB) *ProductRepository {
 }
 
 func (r *ProductRepository) GetProducts() ([]model.Product, error) {
-	rows, err := r.db.Query("SELECT id, name, description, price, stock, created_at, updatedA_at FROM products")
+	rows, err := r.db.Query("SELECT id, name, description, price, stock, created_at, updated_at FROM products")
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	var products []model.Product
+	products := []model.Product{}
 	for rows.Next() {
 		var product model.Product
 		err = rows.Scan(
