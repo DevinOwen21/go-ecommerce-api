@@ -15,22 +15,62 @@ func NewProductRepository(db *sql.DB) *ProductRepository {
 	return &ProductRepository{db: db}
 }
 
-func (r *ProductRepository) GetProducts(pagination dto.PaginationRequest) (model.ProductListResult, error) {
+func (r *ProductRepository) GetProducts(req dto.ProductListRequest) (model.ProductListResult, error) {
+	whereQuery := " WHERE 1 = 1"
+	countQuery := `SELECT COUNT(*) FROM products`
+
+	productQuery := `SELECT id,name,description,price,stock,created_at,updated_at FROM products`
+
+	countArgs := []interface{}{}
+	productArgs := []interface{}{}
+
+	if req.Search != "" {
+		whereQuery += ` AND name LIKE ?`
+
+		searchValue := "%" + req.Search + "%"
+
+		countArgs = append(countArgs, searchValue)
+		productArgs = append(productArgs, searchValue)
+	}
+	countQuery += whereQuery
+	productQuery += whereQuery
+
 	var total int
-	count := r.db.QueryRow("SELECT COUNT(*) FROM products")
-	err := count.Scan(&total)
+
+	err := r.db.QueryRow(
+		countQuery,
+		countArgs...,
+	).Scan(&total)
 	if err != nil {
 		return model.ProductListResult{}, err
 	}
-	rows, err := r.db.Query("SELECT id, name, description, price, stock, created_at, updated_at FROM products LIMIT ? OFFSET ?", pagination.Limit, pagination.Offset)
+
+	productQuery += ` LIMIT ? OFFSET ?`
+
+	productArgs = append(
+		productArgs,
+		req.Pagination.Limit,
+		req.Pagination.Offset,
+	)
+
+	rows, err := r.db.Query(
+		productQuery,
+		productArgs...,
+	)
 	if err != nil {
 		return model.ProductListResult{}, err
 	}
 	defer rows.Close()
 
-	products := []model.Product{}
+	products := make(
+		[]model.Product,
+		0,
+		req.Pagination.Limit,
+	)
+
 	for rows.Next() {
 		var product model.Product
+
 		err = rows.Scan(
 			&product.ID,
 			&product.Name,
@@ -43,16 +83,18 @@ func (r *ProductRepository) GetProducts(pagination dto.PaginationRequest) (model
 		if err != nil {
 			return model.ProductListResult{}, err
 		}
+
 		products = append(products, product)
 	}
+
 	if err := rows.Err(); err != nil {
 		return model.ProductListResult{}, err
 	}
-	result := model.ProductListResult{
+
+	return model.ProductListResult{
 		Products: products,
 		Total:    total,
-	}
-	return result, nil
+	}, nil
 }
 
 func (r *ProductRepository) GetProductById(id int) (model.Product, error) {

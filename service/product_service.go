@@ -19,24 +19,24 @@ func NewProductService(repo *repository.ProductRepository) *ProductService {
 	}
 }
 
-func (s *ProductService) GetProducts(pagination dto.PaginationRequest) ([]dto.ProductResponse, dto.PaginationResponse, error) {
-	if pagination.Page <= 0 {
-		pagination.Page = 1
+func (s *ProductService) GetProducts(req dto.ProductListRequest) ([]dto.ProductResponse, dto.PaginationResponse, error) {
+	if req.Pagination.Page <= 0 {
+		req.Pagination.Page = 1
 	}
-	if pagination.Limit <= 0 {
-		pagination.Limit = 10
+	if req.Pagination.Limit <= 0 {
+		req.Pagination.Limit = 10
 	}
-	if pagination.Limit > 100 {
-		pagination.Limit = 100
+	if req.Pagination.Limit > 100 {
+		req.Pagination.Limit = 100
 	}
-	pagination.Offset = (pagination.Page - 1) * pagination.Limit
-	result, err := s.repo.GetProducts(pagination)
+	req.Pagination.Offset = (req.Pagination.Page - 1) * req.Pagination.Limit
+	result, err := s.repo.GetProducts(req)
 	if err != nil {
 		return nil, dto.PaginationResponse{}, err
 	}
 	totalPages := int(
 		math.Ceil(
-			float64(result.Total) / float64(pagination.Limit),
+			float64(result.Total) / float64(req.Pagination.Limit),
 		),
 	)
 	products := make([]dto.ProductResponse, 0, len(result.Products))
@@ -51,8 +51,8 @@ func (s *ProductService) GetProducts(pagination dto.PaginationRequest) ([]dto.Pr
 	}
 
 	paginationResponse := dto.PaginationResponse{
-		Page:       pagination.Page,
-		Limit:      pagination.Limit,
+		Page:       req.Pagination.Page,
+		Limit:      req.Pagination.Limit,
 		Total:      result.Total,
 		TotalPages: totalPages,
 	}

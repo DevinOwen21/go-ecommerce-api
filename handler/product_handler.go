@@ -22,24 +22,45 @@ func NewProductHandler(service *service.ProductService) *ProductHandler {
 	}
 }
 
-func (h *ProductHandler) GetProducts(w http.ResponseWriter, r *http.Request) {
+func (h *ProductHandler) GetProducts(
+	w http.ResponseWriter,
+	r *http.Request,
+) {
 	pageStr := r.URL.Query().Get("page")
 	limitStr := r.URL.Query().Get("limit")
+	search := r.URL.Query().Get("search")
 
 	page, _ := strconv.Atoi(pageStr)
 	limit, _ := strconv.Atoi(limitStr)
-	pagination := dto.PaginationRequest{
-		Page:  page,
-		Limit: limit,
+
+	req := dto.ProductListRequest{
+		Pagination: dto.PaginationRequest{
+			Page:  page,
+			Limit: limit,
+		},
+		Search: search,
 	}
-	products, paginationResp, err := h.service.GetProducts(pagination)
+
+	products, paginationResp, err :=
+		h.service.GetProducts(req)
 	if err != nil {
-		response.Error(w, http.StatusInternalServerError, "Internal Server Error")
+		response.Error(
+			w,
+			http.StatusInternalServerError,
+			"Internal Server Error",
+		)
 		return
 	}
-	response.JSONPagination(w, true, http.StatusOK, "Product Retrieved Successfully", products, &paginationResp)
-}
 
+	response.JSONPagination(
+		w,
+		true,
+		http.StatusOK,
+		"Products retrieved successfully",
+		products,
+		&paginationResp,
+	)
+}
 func (h *ProductHandler) GetProductByID(w http.ResponseWriter, r *http.Request) {
 
 	id := chi.URLParam(r, "id")
