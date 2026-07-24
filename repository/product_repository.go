@@ -3,6 +3,7 @@ package repository
 import (
 	"database/sql"
 	"errors"
+	"go-ecommerce-api/dto"
 	"go-ecommerce-api/model"
 )
 
@@ -14,10 +15,16 @@ func NewProductRepository(db *sql.DB) *ProductRepository {
 	return &ProductRepository{db: db}
 }
 
-func (r *ProductRepository) GetProducts() ([]model.Product, error) {
-	rows, err := r.db.Query("SELECT id, name, description, price, stock, created_at, updated_at FROM products")
+func (r *ProductRepository) GetProducts(pagination dto.PaginationRequest) (model.ProductListResult, error) {
+	var total int
+	count := r.db.QueryRow("SELECT COUNT(*) FROM products")
+	err := count.Scan(&total)
 	if err != nil {
-		return nil, err
+		return model.ProductListResult{}, err
+	}
+	rows, err := r.db.Query("SELECT id, name, description, price, stock, created_at, updated_at FROM products LIMIT ? OFFSET ?", pagination.Limit, pagination.Offset)
+	if err != nil {
+		return model.ProductListResult{}, err
 	}
 	defer rows.Close()
 
@@ -34,14 +41,18 @@ func (r *ProductRepository) GetProducts() ([]model.Product, error) {
 			&product.UpdatedAt,
 		)
 		if err != nil {
-			return nil, err
+			return model.ProductListResult{}, err
 		}
 		products = append(products, product)
 	}
 	if err := rows.Err(); err != nil {
-		return nil, err
+		return model.ProductListResult{}, err
 	}
-	return products, nil
+	result := model.ProductListResult{
+		Products: products,
+		Total:    total,
+	}
+	return result, nil
 }
 
 func (r *ProductRepository) GetProductById(id int) (model.Product, error) {

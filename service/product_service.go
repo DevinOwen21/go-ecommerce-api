@@ -2,8 +2,10 @@ package service
 
 import (
 	"errors"
+	"go-ecommerce-api/dto"
 	"go-ecommerce-api/model"
 	"go-ecommerce-api/repository"
+	"math"
 	"strings"
 )
 
@@ -17,8 +19,45 @@ func NewProductService(repo *repository.ProductRepository) *ProductService {
 	}
 }
 
-func (s *ProductService) GetProducts() ([]model.Product, error) {
-	return s.repo.GetProducts()
+func (s *ProductService) GetProducts(pagination dto.PaginationRequest) ([]dto.ProductResponse, dto.PaginationResponse, error) {
+	if pagination.Page <= 0 {
+		pagination.Page = 1
+	}
+	if pagination.Limit <= 0 {
+		pagination.Limit = 10
+	}
+	if pagination.Limit > 100 {
+		pagination.Limit = 100
+	}
+	pagination.Offset = (pagination.Page - 1) * pagination.Limit
+	result, err := s.repo.GetProducts(pagination)
+	if err != nil {
+		return nil, dto.PaginationResponse{}, err
+	}
+	totalPages := int(
+		math.Ceil(
+			float64(result.Total) / float64(pagination.Limit),
+		),
+	)
+	products := make([]dto.ProductResponse, 0, len(result.Products))
+	for _, product := range result.Products {
+		products = append(products, dto.ProductResponse{
+			ID:          product.ID,
+			Name:        product.Name,
+			Description: product.Description,
+			Price:       product.Price,
+			Stock:       product.Stock,
+		})
+	}
+
+	paginationResponse := dto.PaginationResponse{
+		Page:       pagination.Page,
+		Limit:      pagination.Limit,
+		Total:      result.Total,
+		TotalPages: totalPages,
+	}
+
+	return products, paginationResponse, nil
 }
 
 func (s *ProductService) GetProductByID(id int) (model.Product, error) {

@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"go-ecommerce-api/dto"
 	"go-ecommerce-api/model"
 	"go-ecommerce-api/response"
 	"go-ecommerce-api/service"
@@ -22,13 +23,21 @@ func NewProductHandler(service *service.ProductService) *ProductHandler {
 }
 
 func (h *ProductHandler) GetProducts(w http.ResponseWriter, r *http.Request) {
-	products, err := h.service.GetProducts()
+	pageStr := r.URL.Query().Get("page")
+	limitStr := r.URL.Query().Get("limit")
+
+	page, _ := strconv.Atoi(pageStr)
+	limit, _ := strconv.Atoi(limitStr)
+	pagination := dto.PaginationRequest{
+		Page:  page,
+		Limit: limit,
+	}
+	products, paginationResp, err := h.service.GetProducts(pagination)
 	if err != nil {
 		response.Error(w, http.StatusInternalServerError, "Internal Server Error")
 		return
 	}
-
-	response.JSON(w, true, http.StatusOK, "Product Retrieved Successfully", products)
+	response.JSONPagination(w, true, http.StatusOK, "Product Retrieved Successfully", products, &paginationResp)
 }
 
 func (h *ProductHandler) GetProductByID(w http.ResponseWriter, r *http.Request) {
