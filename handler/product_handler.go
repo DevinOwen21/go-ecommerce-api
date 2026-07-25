@@ -29,6 +29,7 @@ func (h *ProductHandler) GetProducts(
 	pageStr := r.URL.Query().Get("page")
 	limitStr := r.URL.Query().Get("limit")
 	search := r.URL.Query().Get("search")
+	categoryStr := r.URL.Query().Get("category")
 
 	page, _ := strconv.Atoi(pageStr)
 	limit, _ := strconv.Atoi(limitStr)
@@ -38,7 +39,8 @@ func (h *ProductHandler) GetProducts(
 			Page:  page,
 			Limit: limit,
 		},
-		Search: search,
+		Search:   search,
+		Category: categoryStr,
 	}
 
 	products, paginationResp, err :=
@@ -79,13 +81,13 @@ func (h *ProductHandler) GetProductByID(w http.ResponseWriter, r *http.Request) 
 }
 
 func (h *ProductHandler) CreateProduct(w http.ResponseWriter, r *http.Request) {
-	var product model.Product
-	if err := json.NewDecoder(r.Body).Decode(&product); err != nil {
+	var req dto.CreateProductRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		response.Error(w, http.StatusBadRequest, "Bad Request")
 		return
 	}
 
-	result, err := h.service.CreateProduct(product)
+	result, err := h.service.CreateProduct(req)
 	if err != nil {
 		response.Error(w, http.StatusBadRequest, "Bad Request")
 		return

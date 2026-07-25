@@ -7,4 +7,5 @@ type ProductListRequest struct {
 	MaxPrice   *float64
 	SortBy     string
 	Order      string
+	Category   string
 }

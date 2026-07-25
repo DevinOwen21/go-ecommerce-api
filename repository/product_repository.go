@@ -3,7 +3,6 @@ package repository
 import (
 	"database/sql"
 	"errors"
-	"go-ecommerce-api/dto"
 	"go-ecommerce-api/model"
 )
 
@@ -15,22 +14,28 @@ func NewProductRepository(db *sql.DB) *ProductRepository {
 	return &ProductRepository{db: db}
 }
 
-func (r *ProductRepository) GetProducts(req dto.ProductListRequest) (model.ProductListResult, error) {
+func (r *ProductRepository) GetProducts(filter model.ProductListFilter) (model.ProductListResult, error) {
 	whereQuery := " WHERE 1 = 1"
 	countQuery := `SELECT COUNT(*) FROM products`
 
-	productQuery := `SELECT id,name,description,price,stock,created_at,updated_at FROM products`
+	productQuery := `SELECT id,name,description,price,stock,category,created_at,updated_at FROM products`
 
 	countArgs := []interface{}{}
 	productArgs := []interface{}{}
 
-	if req.Search != "" {
+	if filter.Search != "" {
 		whereQuery += ` AND name LIKE ?`
 
-		searchValue := "%" + req.Search + "%"
+		searchValue := "%" + filter.Search + "%"
 
 		countArgs = append(countArgs, searchValue)
 		productArgs = append(productArgs, searchValue)
+	}
+	if filter.Category != nil {
+		whereQuery += ` AND category = ?`
+
+		countArgs = append(countArgs, *filter.Category)
+		productArgs = append(productArgs, *filter.Category)
 	}
 	countQuery += whereQuery
 	productQuery += whereQuery
@@ -49,8 +54,8 @@ func (r *ProductRepository) GetProducts(req dto.ProductListRequest) (model.Produ
 
 	productArgs = append(
 		productArgs,
-		req.Pagination.Limit,
-		req.Pagination.Offset,
+		filter.Limit,
+		filter.Offset,
 	)
 
 	rows, err := r.db.Query(
@@ -65,7 +70,7 @@ func (r *ProductRepository) GetProducts(req dto.ProductListRequest) (model.Produ
 	products := make(
 		[]model.Product,
 		0,
-		req.Pagination.Limit,
+		filter.Limit,
 	)
 
 	for rows.Next() {
@@ -77,6 +82,7 @@ func (r *ProductRepository) GetProducts(req dto.ProductListRequest) (model.Produ
 			&product.Description,
 			&product.Price,
 			&product.Stock,
+			&product.Category,
 			&product.CreatedAt,
 			&product.UpdatedAt,
 		)
@@ -99,9 +105,9 @@ func (r *ProductRepository) GetProducts(req dto.ProductListRequest) (model.Produ
 
 func (r *ProductRepository) GetProductById(id int) (model.Product, error) {
 	var product model.Product
-	row := r.db.QueryRow("SELECT id, name, description, price, stock, created_at, updated_at FROM products WHERE id = ?", id)
+	row := r.db.QueryRow("SELECT id, name, description, price, stock, category ,created_at, updated_at FROM products WHERE id = ?", id)
 	err := row.Scan(
-		&product.ID, &product.Name, &product.Description, &product.Price, &product.Stock, &product.CreatedAt, &product.UpdatedAt)
+		&product.ID, &product.Name, &product.Description, &product.Price, &product.Stock, &product.Category, &product.CreatedAt, &product.UpdatedAt)
 	if err != nil {
 		return model.Product{}, err
 	}
@@ -110,7 +116,7 @@ func (r *ProductRepository) GetProductById(id int) (model.Product, error) {
 }
 
 func (r *ProductRepository) CreateProduct(product model.Product) (model.Product, error) {
-	result, err := r.db.Exec("INSERT INTO products (name, description, price, stock) VALUES (?, ?, ?, ?)", product.Name, product.Description, product.Price, product.Stock)
+	result, err := r.db.Exec("INSERT INTO products (name, description, price, stock, category) VALUES (?, ?, ?, ?, ?)", product.Name, product.Description, product.Price, product.Stock, product.Category)
 	if err != nil {
 		return model.Product{}, err
 	}
@@ -118,7 +124,6 @@ func (r *ProductRepository) CreateProduct(product model.Product) (model.Product,
 	if err != nil {
 		return model.Product{}, err
 	}
-	product.ID = int(id)
 	return r.GetProductById(int(id))
 }
 
