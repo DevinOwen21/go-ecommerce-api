@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"go-ecommerce-api/model"
+	"strings"
 )
 
 type ProductRepository struct {
@@ -50,6 +51,26 @@ func (r *ProductRepository) GetProducts(filter model.ProductListFilter) (model.P
 		return model.ProductListResult{}, err
 	}
 
+	var sortColumn string
+
+	switch filter.SortBy {
+	case model.ProductSortByName:
+		sortColumn = "name"
+	case model.ProductSortByPrice:
+		sortColumn = "price"
+	case model.ProductSortByCreatedAt:
+		sortColumn = "created_at"
+	default:
+		sortColumn = "created_at"
+	}
+
+	sortOrder := "ASC"
+
+	if strings.EqualFold(filter.Order, "desc") {
+		sortOrder = "DESC"
+	}
+
+	productQuery += " ORDER BY " + sortColumn + " " + sortOrder
 	productQuery += ` LIMIT ? OFFSET ?`
 
 	productArgs = append(
@@ -86,6 +107,7 @@ func (r *ProductRepository) GetProducts(filter model.ProductListFilter) (model.P
 			&product.CreatedAt,
 			&product.UpdatedAt,
 		)
+
 		if err != nil {
 			return model.ProductListResult{}, err
 		}

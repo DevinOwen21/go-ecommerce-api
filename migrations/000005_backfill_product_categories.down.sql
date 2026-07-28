@@ -1,0 +1,2 @@
+ALTER TABLE products
+    MODIFY COLUMN category INT NULL;

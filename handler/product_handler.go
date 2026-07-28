@@ -30,6 +30,8 @@ func (h *ProductHandler) GetProducts(
 	limitStr := r.URL.Query().Get("limit")
 	search := r.URL.Query().Get("search")
 	categoryStr := r.URL.Query().Get("category")
+	sortBy := r.URL.Query().Get("sort_by")
+	order := r.URL.Query().Get("order")
 
 	page, _ := strconv.Atoi(pageStr)
 	limit, _ := strconv.Atoi(limitStr)
@@ -41,6 +43,8 @@ func (h *ProductHandler) GetProducts(
 		},
 		Search:   search,
 		Category: categoryStr,
+		SortBy:   sortBy,
+		Order:    order,
 	}
 
 	products, paginationResp, err :=
@@ -48,8 +52,8 @@ func (h *ProductHandler) GetProducts(
 	if err != nil {
 		response.Error(
 			w,
-			http.StatusInternalServerError,
-			"Internal Server Error",
+			http.StatusBadRequest,
+			err.Error(),
 		)
 		return
 	}

@@ -46,6 +46,27 @@ func (s *ProductService) GetProducts(req dto.ProductListRequest) ([]dto.ProductR
 		filter.Category = &category
 	}
 
+	sortBy := model.ProductSortBy(req.SortBy)
+	order := strings.TrimSpace(strings.ToLower(req.Order))
+
+	if sortBy == "" {
+		sortBy = model.ProductSortByCreatedAt
+		order = "desc"
+	} else {
+		if !sortBy.IsValid() {
+			return nil, dto.PaginationResponse{}, errors.New("invalid sort field")
+		}
+		if order == "" {
+			order = "asc"
+		}
+		if order != "desc" && order != "asc" {
+			return nil, dto.PaginationResponse{}, errors.New("invalid sort order")
+		}
+	}
+
+	filter.SortBy = sortBy
+	filter.Order = order
+
 	result, err := s.repo.GetProducts(filter)
 	if err != nil {
 		return nil, dto.PaginationResponse{}, err

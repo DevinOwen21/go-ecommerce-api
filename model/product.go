@@ -29,7 +29,17 @@ type ProductListFilter struct {
 	Offset   int
 	Search   string
 	Category *ProductCategory
+	SortBy   ProductSortBy
+	Order    string
 }
+
+type ProductSortBy string
+
+const (
+	ProductSortByName      ProductSortBy = "name"
+	ProductSortByPrice     ProductSortBy = "price"
+	ProductSortByCreatedAt ProductSortBy = "created_at"
+)
 
 func ParseProductCategory(category string) (ProductCategory, error) {
 	category = strings.TrimSpace(category)
@@ -48,5 +58,14 @@ func (c ProductCategory) String() string {
 		return "Electronics"
 	default:
 		return "Unknown"
+	}
+}
+
+func (s ProductSortBy) IsValid() bool {
+	switch s {
+	case ProductSortByName, ProductSortByPrice, ProductSortByCreatedAt:
+		return true
+	default:
+		return false
 	}
 }
