@@ -31,11 +31,27 @@ func (s *ProductService) GetProducts(req dto.ProductListRequest) ([]dto.ProductR
 	}
 	req.Pagination.Offset = (req.Pagination.Page - 1) * req.Pagination.Limit
 
+	if req.MinPrice != nil && *req.MinPrice < 0 {
+		return nil, dto.PaginationResponse{}, errors.New("minPrice cannot be negative")
+	}
+
+	if req.MaxPrice != nil && *req.MaxPrice < 0 {
+		return nil, dto.PaginationResponse{}, errors.New("maxPrice cannot be negative")
+	}
+
+	if req.MinPrice != nil && req.MaxPrice != nil {
+		if *req.MinPrice > *req.MaxPrice {
+			return nil, dto.PaginationResponse{}, errors.New("minPrice cannot be greater than maxPrice")
+		}
+	}
+
 	filter := model.ProductListFilter{
-		Page:   req.Pagination.Page,
-		Limit:  req.Pagination.Limit,
-		Offset: req.Pagination.Offset,
-		Search: req.Search,
+		Page:     req.Pagination.Page,
+		Limit:    req.Pagination.Limit,
+		Offset:   req.Pagination.Offset,
+		Search:   req.Search,
+		MinPrice: req.MinPrice,
+		MaxPrice: req.MaxPrice,
 	}
 
 	if strings.TrimSpace(req.Category) != "" {

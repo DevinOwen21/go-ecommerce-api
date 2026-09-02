@@ -32,9 +32,41 @@ func (h *ProductHandler) GetProducts(
 	categoryStr := r.URL.Query().Get("category")
 	sortBy := r.URL.Query().Get("sort_by")
 	order := r.URL.Query().Get("order")
+	minPrice := r.URL.Query().Get("min_price")
+	maxPrice := r.URL.Query().Get("max_price")
 
 	page, _ := strconv.Atoi(pageStr)
 	limit, _ := strconv.Atoi(limitStr)
+
+	var minPriceValue *int
+	if minPrice != "" {
+		parsedMinPrice, err := strconv.Atoi(minPrice)
+
+		if err != nil {
+			response.Error(
+				w,
+				http.StatusBadRequest,
+				"invalid min_price",
+			)
+			return
+		}
+		minPriceValue = &parsedMinPrice
+	}
+
+	var maxPriceValue *int
+	if maxPrice != "" {
+		parsedMaxPrice, err := strconv.Atoi(maxPrice)
+
+		if err != nil {
+			response.Error(
+				w,
+				http.StatusBadRequest,
+				"invalid max_price",
+			)
+			return
+		}
+		maxPriceValue = &parsedMaxPrice
+	}
 
 	req := dto.ProductListRequest{
 		Pagination: dto.PaginationRequest{
@@ -45,6 +77,8 @@ func (h *ProductHandler) GetProducts(
 		Category: categoryStr,
 		SortBy:   sortBy,
 		Order:    order,
+		MinPrice: minPriceValue,
+		MaxPrice: maxPriceValue,
 	}
 
 	products, paginationResp, err :=

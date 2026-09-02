@@ -38,6 +38,20 @@ func (r *ProductRepository) GetProducts(filter model.ProductListFilter) (model.P
 		countArgs = append(countArgs, *filter.Category)
 		productArgs = append(productArgs, *filter.Category)
 	}
+	if filter.MinPrice != nil {
+		whereQuery += ` AND price >= ?`
+
+		countArgs = append(countArgs, *filter.MinPrice)
+		productArgs = append(productArgs, *filter.MinPrice)
+	}
+
+	if filter.MaxPrice != nil {
+		whereQuery += ` AND price <= ?`
+
+		countArgs = append(countArgs, *filter.MaxPrice)
+		productArgs = append(productArgs, *filter.MaxPrice)
+	}
+
 	countQuery += whereQuery
 	productQuery += whereQuery
 

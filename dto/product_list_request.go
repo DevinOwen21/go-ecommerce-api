@@ -3,8 +3,8 @@ package dto
 type ProductListRequest struct {
 	Pagination PaginationRequest
 	Search     string
-	MinPrice   *float64
-	MaxPrice   *float64
+	MinPrice   *int
+	MaxPrice   *int
 	SortBy     string
 	Order      string
 	Category   string

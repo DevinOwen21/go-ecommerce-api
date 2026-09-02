@@ -31,6 +31,8 @@ type ProductListFilter struct {
 	Category *ProductCategory
 	SortBy   ProductSortBy
 	Order    string
+	MinPrice *int
+	MaxPrice *int
 }
 
 type ProductSortBy string
