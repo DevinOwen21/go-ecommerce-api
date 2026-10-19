@@ -8,7 +8,7 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-func SetupRouter(productHandler *handler.ProductHandler, userHandler *handler.UserHandler, authHandler *handler.AuthHandler) http.Handler {
+func SetupRouter(productHandler *handler.ProductHandler, userHandler *handler.UserHandler, authHandler *handler.AuthHandler, cartHandler *handler.CartHandler) http.Handler {
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 	r.Get("/products", productHandler.GetProducts)
@@ -18,6 +18,10 @@ func SetupRouter(productHandler *handler.ProductHandler, userHandler *handler.Us
 		r.Use(middleware.JWT)
 
 		r.Get("/users/me", userHandler.GetProfile)
+		r.Post("/cart/items", cartHandler.AddCartItem)
+		r.Get("/cart", cartHandler.GetCart)
+		r.Patch("/cart/items/{productID}", cartHandler.UpdateCartItem)
+		r.Delete("/cart/items/{productID}", cartHandler.DeleteCartItem)
 	})
 
 	r.Group(func(r chi.Router) {
