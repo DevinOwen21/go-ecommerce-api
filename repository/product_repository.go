@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"go-ecommerce-api/model"
@@ -203,6 +204,25 @@ func (r *ProductRepository) DeleteProduct(id int) error {
 	}
 	if rowsAffected == 0 {
 		return errors.New("product not found")
+	}
+	return nil
+}
+
+func (r *ProductRepository) ReserveStock(ctx context.Context, tx *sql.Tx, quantity, productID int) error {
+	if quantity <= 0 {
+		return errors.New("quantity must be greater than zero")
+	}
+	result, err := tx.ExecContext(ctx, "UPDATE products SET reserved_stock = reserved_stock + ? WHERE id = ? AND stock - reserved_stock >= ?", quantity, productID, quantity)
+	if err != nil {
+		return err
+	}
+
+	affected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if affected == 0 {
+		return errors.New("product not found or insufficient stock")
 	}
 	return nil
 }

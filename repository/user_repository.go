@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"context"
 	"database/sql"
 	"go-ecommerce-api/model"
 )
@@ -56,4 +57,15 @@ func (r *UserRepository) GetUserByID(id int) (*model.User, error) {
 		return nil, err
 	}
 	return &user, nil
+}
+
+func (r *UserRepository) LockUserForCheckout(ctx context.Context, tx *sql.Tx, userID int) error {
+	row := tx.QueryRowContext(ctx, "SELECT id FROM users where id = ? FOR UPDATE", userID)
+	var lockedUserId int
+	err := row.Scan(
+		&lockedUserId)
+	if err != nil {
+		return err
+	}
+	return nil
 }

@@ -24,14 +24,19 @@ func main() {
 	cartService := service.NewCartService(cartRepo, productRepo)
 	cartHandler := handler.NewCartHandler(cartService)
 
+	orderRepo := repository.NewOrderRepository(db)
+
 	userRepo := repository.NewUserRepository(db)
 	userService := service.NewUserService(userRepo)
 	userHandler := handler.NewUserHandler(userService)
 
+	checkoutService := service.NewCheckoutService(db, cartRepo, productRepo, orderRepo, userRepo)
+	checkoutHandler := handler.NewCheckoutHandler(checkoutService)
+
 	authService := service.NewAuthService(userRepo)
 	authHandler := handler.NewAuthHandler(authService)
 
-	r := router.SetupRouter(productHandler, userHandler, authHandler, cartHandler)
+	r := router.SetupRouter(productHandler, userHandler, authHandler, cartHandler, checkoutHandler)
 
 	log.Println("Starting server on :8080")
 	log.Fatal(http.ListenAndServe(":8080", r))

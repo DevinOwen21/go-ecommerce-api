@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"context"
 	"database/sql"
 	"go-ecommerce-api/model"
 )
@@ -78,4 +79,33 @@ func (r *CartRepository) DeleteCartItem(userID, productID int) error {
 		return err
 	}
 	return nil
+}
+
+func (r *CartRepository) ClearCart(ctx context.Context, tx *sql.Tx, userID int) error {
+	_, err := tx.ExecContext(ctx, "DELETE FROM user_carts WHERE user_id = ?", userID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *CartRepository) GetCartForCheckout(ctx context.Context, tx *sql.Tx, userID int) ([]model.CartItem, error) {
+	rows, err := tx.QueryContext(ctx, "SELECT uc.product_id, p.name, p.price, uc.quantity FROM user_carts uc INNER JOIN products p ON uc.product_id = p.id WHERE uc.user_id = ? FOR UPDATE", userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	items := []model.CartItem{}
+	for rows.Next() {
+		var item model.CartItem
+		if err := rows.Scan(&item.ProductID, &item.Name, &item.Price, &item.Quantity); err != nil {
+			return nil, err
+		}
+		items = append(items, item)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }

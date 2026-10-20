@@ -13,14 +13,15 @@ const (
 )
 
 type Product struct {
-	ID          int             `json:"id"`
-	Name        string          `json:"name"`
-	Description string          `json:"description"`
-	Price       int             `json:"price"`
-	Stock       int             `json:"stock"`
-	Category    ProductCategory `json:"category"`
-	CreatedAt   time.Time       `json:"created_at"`
-	UpdatedAt   time.Time       `json:"updated_at"`
+	ID            int             `json:"id"`
+	Name          string          `json:"name"`
+	Description   string          `json:"description"`
+	Price         int             `json:"price"`
+	Stock         int             `json:"stock"`
+	ReservedStock int             `json:"reserved_stock"`
+	Category      ProductCategory `json:"category"`
+	CreatedAt     time.Time       `json:"created_at"`
+	UpdatedAt     time.Time       `json:"updated_at"`
 }
 
 type ProductListFilter struct {
