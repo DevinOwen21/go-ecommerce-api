@@ -1,11 +1,13 @@
 package main
 
 import (
+	"context"
 	"go-ecommerce-api/database"
 	"go-ecommerce-api/handler"
 	"go-ecommerce-api/repository"
 	"go-ecommerce-api/router"
 	"go-ecommerce-api/service"
+	"go-ecommerce-api/worker"
 	"log"
 	"net/http"
 )
@@ -26,6 +28,9 @@ func main() {
 
 	orderRepo := repository.NewOrderRepository(db)
 
+	expirationService := service.NewOrderExpirationService(db, orderRepo, productRepo)
+	expirationWorker := worker.NewOrderExpirationWorker(expirationService)
+
 	userRepo := repository.NewUserRepository(db)
 	userService := service.NewUserService(userRepo)
 	userHandler := handler.NewUserHandler(userService)
@@ -35,6 +40,11 @@ func main() {
 
 	authService := service.NewAuthService(userRepo)
 	authHandler := handler.NewAuthHandler(authService)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	go expirationWorker.Start(ctx)
 
 	r := router.SetupRouter(productHandler, userHandler, authHandler, cartHandler, checkoutHandler)
 

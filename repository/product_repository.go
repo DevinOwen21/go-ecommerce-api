@@ -226,3 +226,24 @@ func (r *ProductRepository) ReserveStock(ctx context.Context, tx *sql.Tx, quanti
 	}
 	return nil
 }
+
+func (r *ProductRepository) ReleaseReserveStock(ctx context.Context, tx *sql.Tx, quantity, productID int) error {
+	result, err := tx.ExecContext(ctx,
+		"UPDATE products SET reserved_stock = reserved_stock - ? WHERE id = ? AND reserved_stock >= ?",
+		quantity, productID, quantity,
+	)
+	if err != nil {
+		return err
+	}
+
+	affected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if affected != 1 {
+		return errors.New("fail to release stock")
+	}
+
+	return nil
+}
