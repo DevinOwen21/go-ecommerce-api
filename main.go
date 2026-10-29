@@ -10,6 +10,11 @@ import (
 	"go-ecommerce-api/worker"
 	"log"
 	"net/http"
+	"os"
+	"os/signal"
+	"sync"
+	"syscall"
+	"time"
 )
 
 func main() {
@@ -41,13 +46,46 @@ func main() {
 	authService := service.NewAuthService(userRepo)
 	authHandler := handler.NewAuthHandler(authService)
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
 
-	go expirationWorker.Start(ctx)
+	var wg sync.WaitGroup
+
+	wg.Add(1)
+
+	go func() {
+		defer wg.Done()
+		expirationWorker.Start(ctx)
+	}()
 
 	r := router.SetupRouter(productHandler, userHandler, authHandler, cartHandler, checkoutHandler)
 
-	log.Println("Starting server on :8080")
-	log.Fatal(http.ListenAndServe(":8080", r))
+	srv := &http.Server{
+		Addr:    ":8080",
+		Handler: r,
+	}
+
+	go func() {
+		log.Println("Starting server on :8080")
+
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Println("Http server error:", err)
+		}
+	}()
+	<-ctx.Done()
+	log.Println("Shutdown signal received")
+
+	shutdownCtx, cancel := context.WithTimeout(
+		context.Background(),
+		10*time.Second,
+	)
+	defer cancel()
+
+	if err := srv.Shutdown(shutdownCtx); err != nil {
+		log.Println("HTTP server shutdown error:", err)
+	}
+	log.Println("HTTP server shutdown completed")
+
+	wg.Wait()
+	log.Println("Expiration worker stopped")
 }
